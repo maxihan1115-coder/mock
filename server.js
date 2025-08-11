@@ -44,13 +44,18 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
 // Serve Next.js static files
-app.use(express.static(path.join(__dirname, '.next')));
+app.use('/_next', express.static(path.join(__dirname, '.next')));
 
 // Serve React app - fallback to index.html
 app.get('*', (req, res) => {
   // Check if it's an API route
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API route not found' });
+  }
+  
+  // Check if it's a static file request
+  if (req.path.startsWith('/_next/')) {
+    return res.status(404).json({ error: 'Static file not found' });
   }
   
   // Serve the main page - try different paths

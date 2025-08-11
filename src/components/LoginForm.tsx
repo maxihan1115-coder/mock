@@ -70,6 +70,7 @@ export function LoginForm() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="사용자명을 입력하세요"
+              autoComplete="username"
               required
             />
           </div>
@@ -83,6 +84,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호를 입력하세요 (아무거나 가능)"
+              autoComplete="current-password"
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
