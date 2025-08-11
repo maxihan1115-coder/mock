@@ -34,13 +34,14 @@ export async function requestPlatformCode(uuid: string): Promise<PlatformRequest
   const apiUrl = `${process.env.PLATFORM_API_BASE_URL}/m/auth/v1/bapp/request-code?uuid=${uuid}`;
   
   const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
-  const authHeader = authToken?.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+  // Basic 인증이므로 Bearer 접두사 제거
+  const authHeader = authToken || '';
   
   console.log('🚀 플랫폼 API 호출 시작:', {
     url: apiUrl,
     uuid: uuid,
     authToken: authToken ? '설정됨' : '설정안됨',
-    authHeader: authHeader ? `${authHeader.substring(0, 20)}...` : '없음',
+    authHeader: authHeader ? `${authHeader.substring(0, 15)}...` : '없음',
     baseUrl: process.env.PLATFORM_API_BASE_URL
   });
 
