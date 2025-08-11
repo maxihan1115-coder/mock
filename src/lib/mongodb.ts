@@ -33,7 +33,6 @@ async function dbConnect() {
       socketTimeoutMS: 45000,
       // 배포 환경에서 더 안정적인 연결을 위한 설정
       retryWrites: true,
-      w: 'majority',
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

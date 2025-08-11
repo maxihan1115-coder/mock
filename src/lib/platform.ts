@@ -4,6 +4,7 @@ export interface PlatformRequestCodeResponse {
   success: boolean;
   code?: string;
   error?: string;
+  isSSLError?: boolean;
 }
 
 export interface PlatformCode {
@@ -33,8 +34,8 @@ export function validateApiKey(apiKey: string): boolean {
 export async function requestPlatformCode(uuid: string): Promise<PlatformRequestCodeResponse> {
   const apiUrl = `${process.env.PLATFORM_API_BASE_URL}/m/auth/v1/bapp/request-code?uuid=${uuid}`;
   
-  // SSL 검증 비활성화 여부 확인
-  const disableSSLVerification = process.env.DISABLE_SSL_VERIFICATION === 'true';
+  // SSL 검증 비활성화 여부 확인 (향후 사용 예정)
+  // const disableSSLVerification = process.env.DISABLE_SSL_VERIFICATION === 'true';
   
   const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
   // Basic 인증이므로 Bearer 접두사 제거

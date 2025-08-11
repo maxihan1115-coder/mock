@@ -67,4 +67,5 @@ export interface APIResponse<T = unknown> {
   message?: string;
   timestamp?: string;
   endpoint?: string;
+  details?: string;
 } 

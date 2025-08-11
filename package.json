@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "start": "npm run build && next start",
+    "dev": "next dev -p 3000",
+    "start": "next start -p 3000",
     "build": "next build",
     "server": "node server.js",
     "next-server": "next start -p 3001",
