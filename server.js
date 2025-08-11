@@ -55,12 +55,12 @@ app.get('*', (req, res) => {
   
   // Serve the main page - try different paths
   const indexPath = path.join(__dirname, '.next', 'static', 'index.html');
-  const fallbackPath = path.join(__dirname, '.next', 'server', 'app', 'page.html');
+  const serverIndexPath = path.join(__dirname, '.next', 'server', 'app', 'index.html');
   
   if (require('fs').existsSync(indexPath)) {
     res.sendFile(indexPath);
-  } else if (require('fs').existsSync(fallbackPath)) {
-    res.sendFile(fallbackPath);
+  } else if (require('fs').existsSync(serverIndexPath)) {
+    res.sendFile(serverIndexPath);
   } else {
     res.status(404).json({ error: 'Page not found' });
   }
