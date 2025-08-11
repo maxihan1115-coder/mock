@@ -128,11 +128,13 @@ export default function PlatformIntegration() {
 
     setIsLoading(true);
     try {
+      const authHeader = connectAuth?.startsWith('Bearer ') ? connectAuth : `Bearer ${connectAuth}`;
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_API_BASE_URL || 'https://papi.boradeeps.cc'}/m/auth/v1/bapp/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': connectAuth,
+          'Authorization': authHeader,
         },
         body: JSON.stringify({
           requestCode: connectRequestCode
@@ -164,11 +166,13 @@ export default function PlatformIntegration() {
 
     setIsLoading(true);
     try {
+      const authHeader = disconnectAuth?.startsWith('Bearer ') ? disconnectAuth : `Bearer ${disconnectAuth}`;
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_API_BASE_URL || 'https://api.boradeeps.cc'}/m/auth/v1/bapp/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': disconnectAuth,
+          'Authorization': authHeader,
         },
         body: JSON.stringify({
           uuid: disconnectUuid

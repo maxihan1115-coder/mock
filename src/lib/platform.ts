@@ -33,19 +33,26 @@ export function validateApiKey(apiKey: string): boolean {
 export async function requestPlatformCode(uuid: string): Promise<PlatformRequestCodeResponse> {
   const apiUrl = `${process.env.PLATFORM_API_BASE_URL}/m/auth/v1/bapp/request-code?uuid=${uuid}`;
   
+  const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
+  const authHeader = authToken?.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+  
   console.log('🚀 플랫폼 API 호출 시작:', {
     url: apiUrl,
     uuid: uuid,
-    authToken: process.env.PLATFORM_API_AUTH_TOKEN ? '설정됨' : '설정안됨',
+    authToken: authToken ? '설정됨' : '설정안됨',
+    authHeader: authHeader ? `${authHeader.substring(0, 20)}...` : '없음',
     baseUrl: process.env.PLATFORM_API_BASE_URL
   });
 
   try {
     // 인증 헤더 구성
+    const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
+    const authHeader = authToken?.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+    
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'Authorization': process.env.PLATFORM_API_AUTH_TOKEN || '',
+        'Authorization': authHeader || '',
         'Content-Type': 'application/json',
       },
     });
