@@ -6,7 +6,7 @@ const UserModel = require('../models/User');
 router.post('/login', async (req, res) => {
   try {
     await dbConnect();
-    const { username, password, platformData } = req.body;
+    const { username, platformData } = req.body;
 
     if (!username) {
       return res.status(400).json({

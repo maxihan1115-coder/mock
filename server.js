@@ -46,13 +46,45 @@ app.get('/health', (req, res) => {
 // Serve Next.js static files
 app.use('/_next', express.static(path.join(__dirname, '.next')));
 
+// Next.js API routes handler
+app.all('/api/*', async (req, res) => {
+  try {
+    // API 경로에서 실제 파일 경로로 변환
+    const apiPath = req.path.replace('/api/', '');
+    const apiFile = path.join(__dirname, 'src', 'app', 'api', apiPath, 'route.ts');
+    
+    if (require('fs').existsSync(apiFile)) {
+      // Next.js API 라우트를 직접 import하여 실행
+      const { POST, GET, PUT, DELETE } = require(apiFile);
+      const method = req.method.toUpperCase();
+      
+      if (method === 'POST' && POST) {
+        // Next.js Request 객체 생성
+        const nextRequest = {
+          json: async () => req.body,
+          headers: req.headers,
+          method: req.method,
+          url: req.url,
+        };
+        
+        const response = await POST(nextRequest);
+        const data = await response.json();
+        
+        res.status(response.status).json(data);
+      } else {
+        res.status(405).json({ error: 'Method not allowed' });
+      }
+    } else {
+      res.status(404).json({ error: 'API route not found' });
+    }
+  } catch (error) {
+    console.error('Next.js API route error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Serve React app - fallback to index.html
 app.get('*', (req, res) => {
-  // Check if it's an API route
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API route not found' });
-  }
-  
   // Check if it's a static file request
   if (req.path.startsWith('/_next/')) {
     return res.status(404).json({ error: 'Static file not found' });

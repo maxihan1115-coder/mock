@@ -5,8 +5,14 @@ import UserModel from '@/models/User';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Login API called');
     await dbConnect();
-    const { username, password, platformData } = await request.json();
+    console.log('Database connected');
+    
+    const body = await request.json();
+    console.log('Request body:', body);
+    
+    const { username, password, platformData } = body;
 
     if (!username) {
       return NextResponse.json<APIResponse>({
@@ -104,9 +110,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json<APIResponse>({
       success: false,
       error: '로그인 중 오류가 발생했습니다.',
+      details: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
   }
 } 

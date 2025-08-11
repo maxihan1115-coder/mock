@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Play, Pause, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Play, Pause, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GameObject {

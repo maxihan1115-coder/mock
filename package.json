@@ -2,12 +2,12 @@
   "name": "quest-mock-game",
   "version": "0.1.0",
   "private": true,
-  "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "start": "npm run build && npm run server",
+    "dev": "next dev",
+    "start": "npm run build && next start",
     "build": "next build",
     "server": "node server.js",
+    "next-server": "next start -p 3001",
     "client": "next dev",
     "lint": "eslint ."
   },

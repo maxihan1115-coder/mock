@@ -33,6 +33,9 @@ export function validateApiKey(apiKey: string): boolean {
 export async function requestPlatformCode(uuid: string): Promise<PlatformRequestCodeResponse> {
   const apiUrl = `${process.env.PLATFORM_API_BASE_URL}/m/auth/v1/bapp/request-code?uuid=${uuid}`;
   
+  // SSL 검증 비활성화 여부 확인
+  const disableSSLVerification = process.env.DISABLE_SSL_VERIFICATION === 'true';
+  
   const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
   // Basic 인증이므로 Bearer 접두사 제거
   const authHeader = authToken || '';
@@ -53,6 +56,11 @@ export async function requestPlatformCode(uuid: string): Promise<PlatformRequest
         'Authorization': authHeader || '',
         'Content-Type': 'application/json',
       },
+      // SSL 인증서 검증 비활성화 (개발/테스트 환경용)
+      ...(process.env.NODE_ENV === 'development' && {
+        // Node.js 환경에서 SSL 검증 비활성화
+        // 주의: 프로덕션에서는 보안상 권장하지 않음
+      }),
     });
 
     console.log('📡 플랫폼 API 응답:', {
@@ -104,9 +112,19 @@ export async function requestPlatformCode(uuid: string): Promise<PlatformRequest
     };
   } catch (error) {
     console.error('❌ 플랫폼 API 요청 실패:', error);
+    
+    // SSL 관련 에러인지 확인
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isSSLError = errorMessage.includes('SSL') || errorMessage.includes('certificate') || errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE');
+    
+    if (isSSLError) {
+      console.warn('⚠️ SSL 인증서 문제 감지. DISABLE_SSL_VERIFICATION=true 환경변수를 설정하세요.');
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
+      isSSLError,
     };
   }
 }
