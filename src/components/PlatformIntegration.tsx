@@ -128,7 +128,7 @@ export default function PlatformIntegration() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://papi.boradeeps.cc/m/auth/v1/bapp/connect', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_API_BASE_URL || 'https://papi.boradeeps.cc'}/m/auth/v1/bapp/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +164,7 @@ export default function PlatformIntegration() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://api.boradeeps.cc/m/auth/v1/bapp/disconnect', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_API_BASE_URL || 'https://api.boradeeps.cc'}/m/auth/v1/bapp/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

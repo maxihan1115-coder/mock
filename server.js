@@ -40,4 +40,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Express.js API Server is running on port ${PORT}`);
   console.log(`📡 API Endpoints: http://localhost:${PORT}/api`);
+  console.log(`🌐 Health Check: http://localhost:${PORT}/health`);
 }); 
