@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001; // 포트를 3001로 변경
+const PORT = process.env.PORT || 3000; // 포트를 3000로 변경
 
 // Middleware
 app.use(cors());
