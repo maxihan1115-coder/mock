@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "start": "npm run build && npm run server",
+    "start": "npm run build && next start",
     "build": "next build",
     "server": "node server.js",
     "client": "next dev",

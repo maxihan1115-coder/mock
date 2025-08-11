@@ -32,9 +32,15 @@ app.use('/api/attendance', attendanceRoutes);
 // Serve Next.js static files
 app.use(express.static(path.join(__dirname, '.next')));
 
-// Serve React app
+// Serve React app - fallback to index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '.next', 'server', 'app', 'page.html'));
+  // Check if it's an API route
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  
+  // Serve the main page
+  res.sendFile(path.join(__dirname, '.next', 'static', 'index.html'));
 });
 
 app.listen(PORT, () => {
