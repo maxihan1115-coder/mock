@@ -145,7 +145,7 @@ router.post('/stage/complete', async (req, res) => {
   }
 });
 
-// 퀘스트 목록 조회
+// 퀘스트 목록 조회 (새로운 형식)
 router.get('/quests', async (req, res) => {
   try {
     await dbConnect();
@@ -158,25 +158,49 @@ router.get('/quests', async (req, res) => {
       });
     }
 
-    const questProgress = await QuestProgressModel.find({ userId }).sort({ questId: 1 });
-    
-    // 기본 퀘스트 데이터 생성
-    const quests = [];
-    for (let i = 1; i <= 5; i++) {
-      const existingQuest = questProgress.find(qp => qp.questId === i);
-      quests.push({
-        questId: i,
-        title: `퀘스트 ${i}`,
-        description: `퀘스트 ${i} 설명`,
-        isCompleted: existingQuest ? existingQuest.isCompleted : false,
-        completedAt: existingQuest ? existingQuest.completedAt : null,
-        progress: existingQuest ? existingQuest.progress : 0,
-      });
-    }
+    // 고정된 퀘스트 목록 반환
+    const quests = [
+      {
+        id: 1,
+        title: "COMPLETE_FIRST_STAGE",
+        totalTimes: 1
+      },
+      {
+        id: 2,
+        title: "SCORE_COLLECTOR",
+        totalTimes: 500
+      },
+      {
+        id: 3,
+        title: "DAILY_CHALLENGE",
+        totalTimes: 1
+      },
+      {
+        id: 4,
+        title: "STAGE_MASTER",
+        totalTimes: 4
+      },
+      {
+        id: 5,
+        title: "HIGH_SCORER",
+        totalTimes: 1000
+      },
+      {
+        id: 6,
+        title: "en_Score",
+        totalTimes: 1
+      },
+      {
+        id: 7,
+        title: "SBT_quest",
+        totalTimes: 1
+      }
+    ];
 
     return res.json({
       success: true,
-      data: quests,
+      error: null,
+      payload: quests
     });
   } catch (error) {
     console.error('Get quests error:', error);

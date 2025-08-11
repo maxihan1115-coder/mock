@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ExternalLink, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { ExternalLink, Copy, CheckCircle, AlertCircle, Link, Unlink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlatformCodeResponse {
@@ -23,6 +23,12 @@ export default function PlatformIntegration() {
   const [isLoading, setIsLoading] = useState(false);
   const [platformData, setPlatformData] = useState<PlatformCodeResponse['data'] | null>(null);
   const [copied, setCopied] = useState(false);
+  
+  // Connect/Disconnect 관련 상태
+  const [connectAuth, setConnectAuth] = useState('');
+  const [connectRequestCode, setConnectRequestCode] = useState('');
+  const [disconnectAuth, setDisconnectAuth] = useState('');
+  const [disconnectUuid, setDisconnectUuid] = useState('');
 
   const handleValidateUuid = async () => {
     if (!uuid.trim()) {
@@ -113,6 +119,78 @@ export default function PlatformIntegration() {
     window.open(platformData.outlink, '_blank');
   };
 
+  // Connect 기능
+  const handleConnect = async () => {
+    if (!connectAuth.trim() || !connectRequestCode.trim()) {
+      toast.error('Authorization과 Request Code를 모두 입력해주세요');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://papi.boradeeps.cc/m/auth/v1/bapp/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': connectAuth,
+        },
+        body: JSON.stringify({
+          requestCode: connectRequestCode
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('연결 성공');
+        console.log('Connect response:', data);
+      } else {
+        toast.error(data.error || '연결 실패');
+      }
+    } catch (error) {
+      console.error('Connect error:', error);
+      toast.error('연결 중 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Disconnect 기능
+  const handleDisconnect = async () => {
+    if (!disconnectAuth.trim() || !disconnectUuid.trim()) {
+      toast.error('Authorization과 UUID를 모두 입력해주세요');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://api.boradeeps.cc/m/auth/v1/bapp/disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': disconnectAuth,
+        },
+        body: JSON.stringify({
+          uuid: disconnectUuid
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('연결 해제 성공');
+        console.log('Disconnect response:', data);
+      } else {
+        toast.error(data.error || '연결 해제 실패');
+      }
+    } catch (error) {
+      console.error('Disconnect error:', error);
+      toast.error('연결 해제 중 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -153,6 +231,91 @@ export default function PlatformIntegration() {
             className="w-full"
           >
             {isLoading ? '처리 중...' : '임시 코드 요청'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Connect 섹션 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Link className="h-5 w-5 text-blue-500" />
+            플랫폼 연결
+          </CardTitle>
+          <CardDescription>
+            플랫폼과 연결을 설정합니다
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="connectAuth">Authorization</Label>
+            <Input
+              id="connectAuth"
+              value={connectAuth}
+              onChange={(e) => setConnectAuth(e.target.value)}
+              placeholder="Bearer aa61e7cf-7f32-40c4-992a-074284275d7c:286"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="connectRequestCode">Request Code</Label>
+            <Input
+              id="connectRequestCode"
+              value={connectRequestCode}
+              onChange={(e) => setConnectRequestCode(e.target.value)}
+              placeholder="3cfb7996-df06-4c5b-8d69-7ecb25b5516b"
+            />
+          </div>
+
+          <Button
+            onClick={handleConnect}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? '연결 중...' : '연결'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Disconnect 섹션 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Unlink className="h-5 w-5 text-red-500" />
+            플랫폼 연결 해제
+          </CardTitle>
+          <CardDescription>
+            플랫폼과의 연결을 해제합니다
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="disconnectAuth">Authorization</Label>
+            <Input
+              id="disconnectAuth"
+              value={disconnectAuth}
+              onChange={(e) => setDisconnectAuth(e.target.value)}
+              placeholder="Basic NFpRSVFhZ1BZdUpNbGV5bjpqVFZmZEwzd0piN0dOUzR0QjBtbkw0Q3EzblV6QWFRcQ=="
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="disconnectUuid">UUID</Label>
+            <Input
+              id="disconnectUuid"
+              value={disconnectUuid}
+              onChange={(e) => setDisconnectUuid(e.target.value)}
+              placeholder="2"
+            />
+          </div>
+
+          <Button
+            onClick={handleDisconnect}
+            disabled={isLoading}
+            variant="destructive"
+            className="w-full"
+          >
+            {isLoading ? '해제 중...' : '연결 해제'}
           </Button>
         </CardContent>
       </Card>

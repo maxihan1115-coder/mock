@@ -3,7 +3,7 @@ const router = express.Router();
 const dbConnect = require('../lib/mongodb');
 const QuestProgressModel = require('../models/QuestProgress');
 
-// 퀘스트 목록 조회
+// 퀘스트 목록 조회 (새로운 형식)
 router.get('/list', async (req, res) => {
   try {
     await dbConnect();
@@ -16,25 +16,49 @@ router.get('/list', async (req, res) => {
       });
     }
 
-    const questProgress = await QuestProgressModel.find({ userId }).sort({ questId: 1 });
-    
-    // 기본 퀘스트 데이터 생성
-    const quests = [];
-    for (let i = 1; i <= 5; i++) {
-      const existingQuest = questProgress.find(qp => qp.questId === i);
-      quests.push({
-        questId: i,
-        title: `퀘스트 ${i}`,
-        description: `퀘스트 ${i} 설명`,
-        isCompleted: existingQuest ? existingQuest.isCompleted : false,
-        completedAt: existingQuest ? existingQuest.completedAt : null,
-        progress: existingQuest ? existingQuest.progress : 0,
-      });
-    }
+    // 고정된 퀘스트 목록 반환
+    const quests = [
+      {
+        id: 1,
+        title: "COMPLETE_FIRST_STAGE",
+        totalTimes: 1
+      },
+      {
+        id: 2,
+        title: "SCORE_COLLECTOR",
+        totalTimes: 500
+      },
+      {
+        id: 3,
+        title: "DAILY_CHALLENGE",
+        totalTimes: 1
+      },
+      {
+        id: 4,
+        title: "STAGE_MASTER",
+        totalTimes: 4
+      },
+      {
+        id: 5,
+        title: "HIGH_SCORER",
+        totalTimes: 1000
+      },
+      {
+        id: 6,
+        title: "en_Score",
+        totalTimes: 1
+      },
+      {
+        id: 7,
+        title: "SBT_quest",
+        totalTimes: 1
+      }
+    ];
 
     return res.json({
       success: true,
-      data: quests,
+      error: null,
+      payload: quests
     });
   } catch (error) {
     console.error('Get quest list error:', error);
@@ -86,6 +110,96 @@ router.post('/start', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: '퀘스트 시작 중 오류가 발생했습니다.',
+    });
+  }
+});
+
+// 퀘스트 연결
+router.post('/connect', async (req, res) => {
+  try {
+    await dbConnect();
+    const { userId, questId, connectionData } = req.body;
+
+    if (!userId || !questId) {
+      return res.status(400).json({
+        success: false,
+        error: '사용자 ID와 퀘스트 ID가 필요합니다.',
+      });
+    }
+
+    let questProgress = await QuestProgressModel.findOne({ userId, questId });
+    
+    if (!questProgress) {
+      questProgress = await QuestProgressModel.create({
+        userId,
+        questId,
+        isCompleted: false,
+        progress: 0,
+        isConnected: true,
+        connectedAt: new Date(),
+        connectionData: connectionData || {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    } else {
+      questProgress.isConnected = true;
+      questProgress.connectedAt = new Date();
+      questProgress.connectionData = connectionData || questProgress.connectionData || {};
+      questProgress.updatedAt = new Date();
+      await questProgress.save();
+    }
+
+    return res.json({
+      success: true,
+      data: questProgress,
+      message: '퀘스트가 연결되었습니다.',
+    });
+  } catch (error) {
+    console.error('Connect quest error:', error);
+    return res.status(500).json({
+      success: false,
+      error: '퀘스트 연결 중 오류가 발생했습니다.',
+    });
+  }
+});
+
+// 퀘스트 연결 해제
+router.post('/disconnect', async (req, res) => {
+  try {
+    await dbConnect();
+    const { userId, questId } = req.body;
+
+    if (!userId || !questId) {
+      return res.status(400).json({
+        success: false,
+        error: '사용자 ID와 퀘스트 ID가 필요합니다.',
+      });
+    }
+
+    let questProgress = await QuestProgressModel.findOne({ userId, questId });
+    
+    if (!questProgress) {
+      return res.status(404).json({
+        success: false,
+        error: '퀘스트 진행도가 없습니다.',
+      });
+    }
+
+    questProgress.isConnected = false;
+    questProgress.disconnectedAt = new Date();
+    questProgress.updatedAt = new Date();
+    await questProgress.save();
+
+    return res.json({
+      success: true,
+      data: questProgress,
+      message: '퀘스트 연결이 해제되었습니다.',
+    });
+  } catch (error) {
+    console.error('Disconnect quest error:', error);
+    return res.status(500).json({
+      success: false,
+      error: '퀘스트 연결 해제 중 오류가 발생했습니다.',
     });
   }
 });

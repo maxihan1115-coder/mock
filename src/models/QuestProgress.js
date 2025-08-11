@@ -25,6 +25,23 @@ const questProgressSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // 연결 관련 필드들 추가
+  isConnected: {
+    type: Boolean,
+    default: false,
+  },
+  connectedAt: {
+    type: Date,
+    default: null,
+  },
+  disconnectedAt: {
+    type: Date,
+    default: null,
+  },
+  connectionData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
+  },
   createdAt: {
     type: Date,
     default: Date.now,

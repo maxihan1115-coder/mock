@@ -4,9 +4,11 @@
   "private": true,
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "build": "echo 'Build completed'",
-    "start": "node server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "next build",
+    "server": "node server.js",
+    "client": "next dev",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -43,6 +45,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "nodemon": "^3.1.10",

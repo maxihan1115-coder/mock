@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001; // 포트를 3001로 변경
 
 // Middleware
 app.use(cors());
@@ -30,5 +30,6 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Express.js API Server is running on port ${PORT}`);
+  console.log(`📡 API Endpoints: http://localhost:${PORT}/api`);
 }); 
