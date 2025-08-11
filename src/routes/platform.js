@@ -40,27 +40,20 @@ router.post('/events', async (req, res) => {
 // 플랫폼 요청 코드 생성
 router.post('/request-code', async (req, res) => {
   try {
-    const { userId, platformId } = req.body;
+    const { uuid } = req.body;
 
-    if (!userId || !platformId) {
+    if (!uuid) {
       return res.status(400).json({
         success: false,
-        error: '사용자 ID와 플랫폼 ID가 필요합니다.',
+        error: 'UUID가 필요합니다.',
       });
     }
 
-    // 간단한 요청 코드 생성 (실제로는 더 복잡한 로직 필요)
-    const requestCode = `REQ_${userId}_${platformId}_${Date.now()}`;
-
-    return res.json({
-      success: true,
-      data: {
-        requestCode,
-        userId,
-        platformId,
-        createdAt: new Date(),
-      },
-      message: '요청 코드가 생성되었습니다.',
+    // Next.js API 라우트로 위임
+    // 이 라우트는 Next.js API 라우트가 처리하도록 함
+    return res.status(404).json({
+      success: false,
+      error: 'API route not found',
     });
   } catch (error) {
     console.error('Request code error:', error);

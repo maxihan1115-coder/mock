@@ -30,18 +30,18 @@ app.get('/health', (req, res) => {
   }
 });
 
-// API Routes
-const authRoutes = require('./src/routes/auth');
-const gameRoutes = require('./src/routes/game');
-const questRoutes = require('./src/routes/quest');
-const platformRoutes = require('./src/routes/platform');
-const attendanceRoutes = require('./src/routes/attendance');
+// API Routes - Next.js API routes를 사용하므로 Express routes는 비활성화
+// const authRoutes = require('./src/routes/auth');
+// const gameRoutes = require('./src/routes/game');
+// const questRoutes = require('./src/routes/quest');
+// const platformRoutes = require('./src/routes/platform');
+// const attendanceRoutes = require('./src/routes/attendance');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/game', gameRoutes);
-app.use('/api/quest', questRoutes);
-app.use('/api/platform', platformRoutes);
-app.use('/api/attendance', attendanceRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/api/game', gameRoutes);
+// app.use('/api/quest', questRoutes);
+// app.use('/api/platform', platformRoutes);
+// app.use('/api/attendance', attendanceRoutes);
 
 // Serve Next.js static files
 app.use('/_next', express.static(path.join(__dirname, '.next')));
