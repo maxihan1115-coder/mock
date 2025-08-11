@@ -13,7 +13,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  try {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      port: PORT,
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // API Routes
@@ -39,8 +53,17 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'API route not found' });
   }
   
-  // Serve the main page
-  res.sendFile(path.join(__dirname, '.next', 'static', 'index.html'));
+  // Serve the main page - try different paths
+  const indexPath = path.join(__dirname, '.next', 'static', 'index.html');
+  const fallbackPath = path.join(__dirname, '.next', 'server', 'app', 'page.html');
+  
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else if (require('fs').existsSync(fallbackPath)) {
+    res.sendFile(fallbackPath);
+  } else {
+    res.status(404).json({ error: 'Page not found' });
+  }
 });
 
 app.listen(PORT, () => {
