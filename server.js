@@ -11,6 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // API Routes
 const authRoutes = require('./src/routes/auth');
 const gameRoutes = require('./src/routes/game');
@@ -24,9 +29,12 @@ app.use('/api/quest', questRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
+// Serve Next.js static files
+app.use(express.static(path.join(__dirname, '.next')));
+
 // Serve React app
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '.next', 'server', 'app', 'page.html'));
 });
 
 app.listen(PORT, () => {
