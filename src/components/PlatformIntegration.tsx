@@ -239,6 +239,58 @@ export default function PlatformIntegration() {
         </CardContent>
       </Card>
 
+      {/* 결과 표시 */}
+      {platformData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-blue-500" />
+              플랫폼 연동 결과
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>임시 코드</Label>
+              <div className="flex items-center gap-2 p-2 bg-gray-100 rounded">
+                <code className="text-sm">{platformData.temporaryCode}</code>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>아웃링크</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={platformData.outlink}
+                  readOnly
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleCopyOutlink}
+                  variant="outline"
+                  size="sm"
+                >
+                  {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button
+                  onClick={handleOpenOutlink}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>만료 시간</Label>
+              <p className="text-sm text-gray-600">
+                {new Date(platformData.expiresAt).toLocaleString('ko-KR')}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Connect 섹션 */}
       <Card>
         <CardHeader>
@@ -323,58 +375,6 @@ export default function PlatformIntegration() {
           </Button>
         </CardContent>
       </Card>
-
-      {/* 결과 표시 */}
-      {platformData && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-blue-500" />
-              플랫폼 연동 결과
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>임시 코드</Label>
-              <div className="flex items-center gap-2 p-2 bg-gray-100 rounded">
-                <code className="text-sm">{platformData.temporaryCode}</code>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>아웃링크</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={platformData.outlink}
-                  readOnly
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleCopyOutlink}
-                  variant="outline"
-                  size="sm"
-                >
-                  {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-                <Button
-                  onClick={handleOpenOutlink}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>만료 시간</Label>
-              <p className="text-sm text-gray-600">
-                {new Date(platformData.expiresAt).toLocaleString('ko-KR')}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 } 
