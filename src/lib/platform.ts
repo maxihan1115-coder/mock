@@ -45,10 +45,7 @@ export async function requestPlatformCode(uuid: string): Promise<PlatformRequest
   });
 
   try {
-    // 인증 헤더 구성
-    const authToken = process.env.PLATFORM_API_AUTH_TOKEN;
-    const authHeader = authToken?.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
-    
+    // 인증 헤더 구성 (이미 위에서 선언됨)
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
