@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
+    "start:apppass": "node scripts/start-apppass.js",
     "build": "next build",
     "server": "node server.js",
     "next-server": "next start -p 3001",

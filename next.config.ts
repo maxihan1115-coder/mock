@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['mongoose'],
   // 정적 파일 서빙 최적화
   output: 'standalone',
+  // AppPass 배포 환경 최적화
+  experimental: {
+    // 서버 컴포넌트 최적화
+    serverComponentsExternalPackages: ['mongoose'],
+  },
   // 헬스 체크를 위한 설정
   async headers() {
     return [
