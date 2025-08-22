@@ -4,26 +4,94 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Play, Pause, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Play, Pause, RotateCcw, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface GameObject {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+// 테트리스 블록 타입 정의
+type TetrominoType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L';
+
+interface Tetromino {
+  type: TetrominoType;
+  shape: number[][];
   color: string;
 }
 
-interface Player extends GameObject {
-  velocityX: number;
-  velocityY: number;
-  onGround: boolean;
+interface Position {
+  x: number;
+  y: number;
 }
 
-interface Obstacle extends GameObject {
-  type: 'platform' | 'enemy' | 'collectible';
-}
+// 테트리스 블록 모양 정의
+const TETROMINOS: Record<TetrominoType, Tetromino> = {
+  I: {
+    type: 'I',
+    shape: [
+      [0, 0, 0, 0],
+      [1, 1, 1, 1],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    color: '#00f5ff',
+  },
+  O: {
+    type: 'O',
+    shape: [
+      [1, 1],
+      [1, 1],
+    ],
+    color: '#ffff00',
+  },
+  T: {
+    type: 'T',
+    shape: [
+      [0, 1, 0],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: '#a000f0',
+  },
+  S: {
+    type: 'S',
+    shape: [
+      [0, 1, 1],
+      [1, 1, 0],
+      [0, 0, 0],
+    ],
+    color: '#00f000',
+  },
+  Z: {
+    type: 'Z',
+    shape: [
+      [1, 1, 0],
+      [0, 1, 1],
+      [0, 0, 0],
+    ],
+    color: '#f00000',
+  },
+  J: {
+    type: 'J',
+    shape: [
+      [1, 0, 0],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: '#0000f0',
+  },
+  L: {
+    type: 'L',
+    shape: [
+      [0, 0, 1],
+      [1, 1, 1],
+      [0, 0, 0],
+    ],
+    color: '#f0a000',
+  },
+};
+
+// 게임 설정
+const BOARD_WIDTH = 10;
+const BOARD_HEIGHT = 20;
+const BLOCK_SIZE = 25;
 
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,422 +113,456 @@ export function GameCanvas() {
     unlockStage,
   } = useGameStore();
 
-  const [player, setPlayer] = useState<Player>({
-    x: 50,
-    y: 300,
-    width: 30,
-    height: 30,
-    color: '#3b82f6',
-    velocityX: 0,
-    velocityY: 0,
-    onGround: false,
-  });
+  // 테트리스 게임 상태
+  const [board, setBoard] = useState<number[][]>(
+    Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0))
+  );
+  const [currentPiece, setCurrentPiece] = useState<Tetromino | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<Position>({ x: 0, y: 0 });
+  const [nextPiece, setNextPiece] = useState<Tetromino | null>(null);
+  const [level, setLevel] = useState(1);
+  const [lines, setLines] = useState(0);
+  const [dropTime, setDropTime] = useState(0);
+  const [lastDropTime, setLastDropTime] = useState(0);
 
-  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
-  const [gameTime, setGameTime] = useState(0);
+  // 새로운 테트로미노 생성
+  const createNewPiece = (): Tetromino => {
+    const types: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+    const randomType = types[Math.floor(Math.random() * types.length)];
+    return TETROMINOS[randomType];
+  };
 
-  // 스테이지별 장애물 설정
-  useEffect(() => {
-    const stageObstacles: Obstacle[] = [];
+  // 게임 초기화
+  const initializeGame = () => {
+    setBoard(Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0)));
+    setLevel(1);
+    setLines(0);
+    setDropTime(0);
+    setLastDropTime(0);
     
-    switch (currentStage) {
-      case 1:
-        // 기본 플랫폼들
-        stageObstacles.push(
-          { x: 0, y: 350, width: 800, height: 50, color: '#8b5a2b', type: 'platform' },
-          { x: 200, y: 250, width: 100, height: 20, color: '#8b5a2b', type: 'platform' },
-          { x: 400, y: 200, width: 100, height: 20, color: '#8b5a2b', type: 'platform' },
-          { x: 600, y: 150, width: 100, height: 20, color: '#8b5a2b', type: 'platform' },
-          { x: 750, y: 100, width: 50, height: 20, color: '#8b5a2b', type: 'platform' },
-          // 수집 아이템
-          { x: 220, y: 220, width: 20, height: 20, color: '#fbbf24', type: 'collectible' },
-          { x: 420, y: 170, width: 20, height: 20, color: '#fbbf24', type: 'collectible' },
-          { x: 620, y: 120, width: 20, height: 20, color: '#fbbf24', type: 'collectible' },
-        );
-        break;
-      case 2:
-        // 동굴 스테이지
-        stageObstacles.push(
-          { x: 0, y: 350, width: 800, height: 50, color: '#4b5563', type: 'platform' },
-          { x: 150, y: 280, width: 80, height: 20, color: '#4b5563', type: 'platform' },
-          { x: 300, y: 210, width: 80, height: 20, color: '#4b5563', type: 'platform' },
-          { x: 450, y: 140, width: 80, height: 20, color: '#4b5563', type: 'platform' },
-          { x: 600, y: 70, width: 80, height: 20, color: '#4b5563', type: 'platform' },
-          { x: 750, y: 0, width: 50, height: 20, color: '#4b5563', type: 'platform' },
-          // 적
-          { x: 200, y: 320, width: 25, height: 25, color: '#ef4444', type: 'enemy' },
-          { x: 400, y: 180, width: 25, height: 25, color: '#ef4444', type: 'enemy' },
-        );
-        break;
-      case 3:
-        // 산 스테이지
-        stageObstacles.push(
-          { x: 0, y: 350, width: 800, height: 50, color: '#6b7280', type: 'platform' },
-          { x: 100, y: 300, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 200, y: 250, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 300, y: 200, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 400, y: 150, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 500, y: 100, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 600, y: 50, width: 60, height: 20, color: '#6b7280', type: 'platform' },
-          { x: 700, y: 0, width: 100, height: 20, color: '#6b7280', type: 'platform' },
-        );
-        break;
-      case 4:
-        // 보스 스테이지
-        stageObstacles.push(
-          { x: 0, y: 350, width: 800, height: 50, color: '#dc2626', type: 'platform' },
-          { x: 350, y: 200, width: 100, height: 100, color: '#dc2626', type: 'enemy' },
-        );
-        break;
+    const firstPiece = createNewPiece();
+    const nextPiece = createNewPiece();
+    
+    setCurrentPiece(firstPiece);
+    setNextPiece(nextPiece);
+    setCurrentPosition({ x: Math.floor(BOARD_WIDTH / 2) - Math.floor(firstPiece.shape[0].length / 2), y: 0 });
+  };
+
+  // 충돌 검사
+  const checkCollision = (piece: Tetromino, position: Position): boolean => {
+    for (let y = 0; y < piece.shape.length; y++) {
+      for (let x = 0; x < piece.shape[y].length; x++) {
+        if (piece.shape[y][x]) {
+          const newX = position.x + x;
+          const newY = position.y + y;
+          
+          if (
+            newX < 0 || 
+            newX >= BOARD_WIDTH || 
+            newY >= BOARD_HEIGHT ||
+            (newY >= 0 && board[newY][newX])
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
+  // 보드에 조각 고정
+  const placePiece = () => {
+    if (!currentPiece) return;
+    
+    const newBoard = board.map(row => [...row]);
+    
+    for (let y = 0; y < currentPiece.shape.length; y++) {
+      for (let x = 0; x < currentPiece.shape[y].length; x++) {
+        if (currentPiece.shape[y][x]) {
+          const boardX = currentPosition.x + x;
+          const boardY = currentPosition.y + y;
+          if (boardY >= 0) {
+            newBoard[boardY][boardX] = 1;
+          }
+        }
+      }
     }
     
-    setObstacles(stageObstacles);
-    setPlayer({ ...player, x: 50, y: 300 });
-  }, [currentStage]);
+    setBoard(newBoard);
+    
+    // 라인 클리어 체크
+    checkLines(newBoard);
+    
+    // 새로운 조각 생성
+    spawnNewPiece();
+  };
+
+  // 라인 클리어 체크
+  const checkLines = (currentBoard: number[][]) => {
+    let linesCleared = 0;
+    const newBoard = currentBoard.filter(row => {
+      const isFull = row.every(cell => cell === 1);
+      if (isFull) {
+        linesCleared++;
+        return false;
+      }
+      return true;
+    });
+    
+    // 제거된 라인만큼 빈 라인 추가
+    while (newBoard.length < BOARD_HEIGHT) {
+      newBoard.unshift(Array(BOARD_WIDTH).fill(0));
+    }
+    
+    if (linesCleared > 0) {
+      setLines((prev: number) => prev + linesCleared);
+      setScore(score + linesCleared * 100 * level);
+      
+      // 레벨 업
+      const newLines = lines + linesCleared;
+      const newLevel = Math.floor(newLines / 10) + 1;
+      if (newLevel > level) {
+        setLevel(newLevel);
+        toast.success(`레벨 ${newLevel} 달성!`);
+      }
+      
+      toast.success(`${linesCleared}줄 클리어! +${linesCleared * 100 * level}점`);
+    }
+    
+    setBoard(newBoard);
+  };
+
+  // 새로운 조각 생성
+  const spawnNewPiece = () => {
+    if (!nextPiece) return;
+    
+    const newPiece = nextPiece;
+    const newNextPiece = createNewPiece();
+    
+    setCurrentPiece(newPiece);
+    setNextPiece(newNextPiece);
+    setCurrentPosition({ 
+      x: Math.floor(BOARD_WIDTH / 2) - Math.floor(newPiece.shape[0].length / 2), 
+      y: 0 
+    });
+    
+    // 게임 오버 체크
+    if (checkCollision(newPiece, { 
+      x: Math.floor(BOARD_WIDTH / 2) - Math.floor(newPiece.shape[0].length / 2), 
+      y: 0 
+    })) {
+      gameOver();
+    }
+  };
+
+  // 게임 오버
+  const gameOver = () => {
+    setIsPlaying(false);
+    toast.error('게임 오버!');
+    
+    // 스테이지 완료 체크 (1000점 이상)
+    if (score >= 1000) {
+      completeStage(currentStage);
+      toast.success('스테이지 완료!');
+    }
+  };
+
+  // 조각 회전
+  const rotatePiece = () => {
+    if (!currentPiece) return;
+    
+    const rotated = {
+      ...currentPiece,
+      shape: currentPiece.shape[0].map((_, i) => 
+        currentPiece.shape.map(row => row[row.length - 1 - i])
+      )
+    };
+    
+    setCurrentPosition(prev => {
+      if (!checkCollision(rotated, prev)) {
+        setCurrentPiece(rotated);
+      }
+      return prev;
+    });
+  };
+
+  // 조각 이동
+  const movePiece = (dx: number, dy: number) => {
+    if (!currentPiece) return false;
+    
+    let moved = false;
+    
+    setCurrentPosition(prev => {
+      const newPosition = { x: prev.x + dx, y: prev.y + dy };
+      
+      if (!checkCollision(currentPiece, newPosition)) {
+        moved = true;
+        return newPosition;
+      } else {
+        if (dy > 0) {
+          // 블록이 바닥에 도달했으므로 고정
+          setTimeout(() => placePiece(), 0);
+        }
+        return prev;
+      }
+    });
+    
+    return moved;
+  };
 
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      setKeys(prev => new Set(prev).add(e.key));
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      setKeys(prev => {
-        const newKeys = new Set(prev);
-        newKeys.delete(e.key);
-        return newKeys;
-      });
+      if (!isPlaying || isPaused) return;
+      
+      switch (e.code) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          movePiece(-1, 0);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          movePiece(1, 0);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          movePiece(0, 1);
+          break;
+        case 'ArrowUp':
+        case 'Space':
+          e.preventDefault();
+          rotatePiece();
+          break;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, isPaused]);
 
   // 게임 루프
   useEffect(() => {
     if (!isPlaying || isPaused) return;
 
-    const gameLoop = () => {
-      if (!canvasRef.current) return;
-
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // 플레이어 이동
-      let newVelocityX = 0;
-      if (keys.has('ArrowLeft') || keys.has('a')) newVelocityX = -5;
-      if (keys.has('ArrowRight') || keys.has('d')) newVelocityX = 5;
-      
-      if (keys.has('ArrowUp') || keys.has('w') || keys.has(' ')) {
-        if (player.onGround) {
-          player.velocityY = -12;
-          player.onGround = false;
-        }
-      }
-
-      // 중력 적용
-      player.velocityY += 0.6;
-      
-      // 플레이어 위치 업데이트
-      const newPlayer = {
-        ...player,
-        x: player.x + newVelocityX,
-        y: player.y + player.velocityY,
-        velocityX: newVelocityX,
-        velocityY: player.velocityY,
-        onGround: false,
-      };
-
-      // 충돌 감지
-      let onGround = false;
-      for (const obstacle of obstacles) {
-        if (obstacle.type === 'platform') {
-          if (newPlayer.x < obstacle.x + obstacle.width &&
-              newPlayer.x + newPlayer.width > obstacle.x &&
-              newPlayer.y < obstacle.y + obstacle.height &&
-              newPlayer.y + newPlayer.height > obstacle.y) {
-            
-            // 위에서 충돌
-            if (player.velocityY > 0 && player.y < obstacle.y) {
-              newPlayer.y = obstacle.y - newPlayer.height;
-              newPlayer.velocityY = 0;
-              newPlayer.onGround = true;
-              onGround = true;
-            }
-          }
-        } else if (obstacle.type === 'enemy') {
-          if (newPlayer.x < obstacle.x + obstacle.width &&
-              newPlayer.x + newPlayer.width > obstacle.x &&
-              newPlayer.y < obstacle.y + obstacle.height &&
-              newPlayer.y + newPlayer.height > obstacle.y) {
-            
-            // 적과 충돌
-            setLives(lives - 1);
-            toast.error('적과 충돌했습니다!');
-            
-            if (lives <= 1) {
-              setIsPlaying(false);
-              toast.error('게임 오버!');
-              return;
-            }
-            
-            // 플레이어 리셋
-            newPlayer.x = 50;
-            newPlayer.y = 300;
-            newPlayer.velocityY = 0;
-          }
-        } else if (obstacle.type === 'collectible') {
-          if (newPlayer.x < obstacle.x + obstacle.width &&
-              newPlayer.x + newPlayer.width > obstacle.x &&
-              newPlayer.y < obstacle.y + obstacle.height &&
-              newPlayer.y + newPlayer.height > obstacle.y) {
-            
-            // 아이템 수집
-            setScore(score + 50);
-            toast.success('아이템 수집! +50점');
-            
-            // 아이템 제거
-            setObstacles(prev => prev.filter(o => o !== obstacle));
-          }
-        }
-      }
-
-      newPlayer.onGround = onGround;
-
-      // 화면 경계 체크
-      if (newPlayer.x < 0) newPlayer.x = 0;
-      if (newPlayer.x + newPlayer.width > canvas.width) newPlayer.x = canvas.width - newPlayer.width;
-      if (newPlayer.y < 0) newPlayer.y = 0;
-      if (newPlayer.y + newPlayer.height > canvas.height) {
-        newPlayer.y = canvas.height - newPlayer.height;
-        newPlayer.velocityY = 0;
-        newPlayer.onGround = true;
-      }
-
-      setPlayer(newPlayer);
-
-      // 목표 지점 도달 체크
-      if (newPlayer.x > 750 && currentStage <= 4) {
-        completeStage(currentStage);
-        
-        // 다음 스테이지 해금
-        if (currentStage < 4) {
-          unlockStage(currentStage + 1);
-        }
-        
-        setIsPlaying(false);
-        toast.success(`스테이지 ${currentStage} 완료! 다음 스테이지가 해금되었습니다.`);
-        
-        // 스테이지 완료 API 호출
-        if (user) {
-          fetch('/api/game/stage/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.uuid,
-              stageId: currentStage,
-              score,
-              timeSpent: gameTime,
-            }),
-          });
+    const gameLoop = (timestamp: number) => {
+      if (timestamp - lastDropTime > (1000 - (level - 1) * 50)) {
+        setCurrentPosition(prev => {
+          if (!currentPiece) return prev;
           
-          // 퀘스트 업데이트
-          // 1번 퀘스트: 첫 번째 스테이지 완료
-          if (currentStage === 1) {
-            fetch('/api/quest/update', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'api-auth': 'QULk7WOS/UDyvd7cxEeK4Nav+sK3mxIiM1FGB1r+DGg='
-              },
-              body: JSON.stringify({
-                uuid: user.uuid,
-                questId: '1',
-                progress: 1,
-                isCompleted: true
-              }),
-            });
-          }
+          const newPosition = { x: prev.x, y: prev.y + 1 };
           
-          // 4번 퀘스트: 모든 스테이지 완료 (진행도 업데이트)
-          fetch('/api/quest/update', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'api-auth': process.env.NEXT_PUBLIC_API_KEY || ''
-            },
-            body: JSON.stringify({
-              uuid: user.uuid,
-              questId: '4',
-              progress: currentStage,
-              isCompleted: currentStage >= 4
-            }),
-          });
-        }
+          if (!checkCollision(currentPiece, newPosition)) {
+            return newPosition;
+          } else {
+            // 블록이 바닥에 도달했으므로 고정
+            placePiece();
+            return prev;
+          }
+        });
+        setLastDropTime(timestamp);
       }
-
-      // 렌더링
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // 배경
-      ctx.fillStyle = '#87ceeb';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // 플레이어 그리기
-      ctx.fillStyle = newPlayer.color;
-      ctx.fillRect(newPlayer.x, newPlayer.y, newPlayer.width, newPlayer.height);
-      
-      // 장애물 그리기
-      obstacles.forEach(obstacle => {
-        ctx.fillStyle = obstacle.color;
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-      });
-
-      // 목표 지점
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(750, 0, 50, 50);
-
       animationRef.current = requestAnimationFrame(gameLoop);
     };
 
     animationRef.current = requestAnimationFrame(gameLoop);
-
+    
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, isPaused, keys, obstacles, player, score, lives, currentStage, user, gameTime]);
+  }, [isPlaying, isPaused, lastDropTime, level, currentPiece, board]);
 
-  // 게임 시간 업데이트
-  useEffect(() => {
-    if (!isPlaying || isPaused) return;
-
-    const interval = setInterval(() => {
-      setGameTime(prev => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, isPaused]);
-
-  // 점수 업데이트 시 퀘스트 업데이트
-  useEffect(() => {
-    if (!user || score === 0) return;
-
-    // 2번 퀘스트: 총 500점 획득
-    if (score >= 500) {
-      fetch('/api/quest/update', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'api-auth': 'QULk7WOS/UDyvd7cxEeK4Nav+sK3mxIiM1FGB1r+DGg='
-        },
-        body: JSON.stringify({
-          uuid: user.uuid,
-          questId: '2',
-          progress: Math.min(score, 500),
-          isCompleted: score >= 500
-        }),
-      });
-    }
-
-    // 5번 퀘스트: 총 1000점 획득
-    if (score >= 1000) {
-      fetch('/api/quest/update', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'api-auth': 'QULk7WOS/UDyvd7cxEeK4Nav+sK3mxIiM1FGB1r+DGg='
-        },
-        body: JSON.stringify({
-          uuid: user.uuid,
-          questId: '5',
-          progress: Math.min(score, 1000),
-          isCompleted: score >= 1000
-        }),
-      });
-    }
-  }, [score, user]);
-
+  // 게임 시작
   const handleStartGame = () => {
+    initializeGame();
     setIsPlaying(true);
     setIsPaused(false);
-    setGameTime(0);
-    
-    // 3번 퀘스트: 오늘 한 번 게임을 플레이
-    if (user) {
-      fetch('/api/quest/update', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'api-auth': 'QULk7WOS/UDyvd7cxEeK4Nav+sK3mxIiM1FGB1r+DGg='
-        },
-        body: JSON.stringify({
-          uuid: user.uuid,
-          questId: '3',
-          progress: 1,
-          isCompleted: true
-        }),
-      });
+  };
+
+  // 게임 일시정지/재개
+  const handlePauseGame = () => {
+    if (isPaused) {
+      setIsPaused(false);
+    } else {
+      setIsPaused(true);
     }
   };
 
-  const handlePauseGame = () => {
-    setIsPaused(!isPaused);
-  };
-
+  // 게임 리셋
   const handleResetGame = () => {
     setIsPlaying(false);
     setIsPaused(false);
-    setGameTime(0);
-    setPlayer({ ...player, x: 50, y: 300, velocityX: 0, velocityY: 0 });
+    initializeGame();
   };
 
+  // 캔버스 렌더링
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 캔버스 크기 설정
+    canvas.width = BOARD_WIDTH * BLOCK_SIZE;
+    canvas.height = BOARD_HEIGHT * BLOCK_SIZE;
+
+    // 배경 그리기
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 보드 그리기
+    for (let y = 0; y < BOARD_HEIGHT; y++) {
+      for (let x = 0; x < BOARD_WIDTH; x++) {
+        if (board[y][x]) {
+          ctx.fillStyle = '#6b7280';
+          ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+          ctx.strokeStyle = '#374151';
+          ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+        }
+      }
+    }
+
+    // 현재 조각 그리기
+    if (currentPiece) {
+      ctx.fillStyle = currentPiece.color;
+      for (let y = 0; y < currentPiece.shape.length; y++) {
+        for (let x = 0; x < currentPiece.shape[y].length; x++) {
+          if (currentPiece.shape[y][x]) {
+            const drawX = (currentPosition.x + x) * BLOCK_SIZE;
+            const drawY = (currentPosition.y + y) * BLOCK_SIZE;
+            ctx.fillRect(drawX, drawY, BLOCK_SIZE, BLOCK_SIZE);
+            ctx.strokeStyle = '#374151';
+            ctx.strokeRect(drawX, drawY, BLOCK_SIZE, BLOCK_SIZE);
+          }
+        }
+      }
+    }
+  }, [board, currentPiece, currentPosition]);
+
   return (
-    <div className="space-y-4">
-      <Card>
+    <div className="flex flex-col items-center space-y-4">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>스테이지 {currentStage}</CardTitle>
+          <CardTitle className="text-center">테트리스 - 스테이지 {currentStage}</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center mb-4">
-            <div className="space-x-4">
-              <span>점수: {score}</span>
-              <span>생명: {lives}</span>
-              <span>시간: {gameTime}초</span>
+        <CardContent className="flex flex-col items-center space-y-4">
+          {/* 게임 정보 */}
+          <div className="flex justify-between w-full max-w-md">
+            <div className="text-center">
+              <div className="text-sm text-gray-500">점수</div>
+              <div className="text-xl font-bold">{score}</div>
             </div>
-            <div className="space-x-2">
-              <Button onClick={handleStartGame} disabled={isPlaying}>
-                <Play className="w-4 h-4 mr-2" />
-                시작
-              </Button>
-              <Button onClick={handlePauseGame} disabled={!isPlaying}>
-                {isPaused ? <Play className="w-4 h-4 mr-2" /> : <Pause className="w-4 h-4 mr-2" />}
-                {isPaused ? '재개' : '일시정지'}
-              </Button>
-              <Button onClick={handleResetGame}>
-                <RotateCcw className="w-4 h-4 mr-2" />
-                리셋
-              </Button>
+            <div className="text-center">
+              <div className="text-sm text-gray-500">레벨</div>
+              <div className="text-xl font-bold">{level}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-gray-500">라인</div>
+              <div className="text-xl font-bold">{lines}</div>
             </div>
           </div>
-          
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={400}
-            className="border border-gray-300 bg-blue-200"
-          />
-          
-          <div className="mt-4 text-sm text-gray-600">
-            <p>조작법: 방향키 또는 WASD로 이동, 스페이스바로 점프</p>
-            <p>목표: 초록색 목표 지점에 도달하세요!</p>
+
+          {/* 게임 캔버스 */}
+          <div className="relative">
+            <canvas
+              ref={canvasRef}
+              className="border-2 border-gray-600 bg-gray-800"
+              style={{
+                width: BOARD_WIDTH * BLOCK_SIZE,
+                height: BOARD_HEIGHT * BLOCK_SIZE,
+              }}
+            />
+            
+            {/* 게임 오버 오버레이 */}
+            {!isPlaying && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <div className="text-2xl font-bold mb-2">테트리스</div>
+                  <div className="text-sm mb-4">시작하려면 버튼을 클릭하세요</div>
+                </div>
+              </div>
+            )}
+            
+            {/* 일시정지 오버레이 */}
+            {isPaused && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="text-white text-2xl font-bold">일시정지</div>
+              </div>
+            )}
+          </div>
+
+          {/* 다음 조각 미리보기 */}
+          {nextPiece && (
+            <div className="text-center">
+              <div className="text-sm text-gray-500 mb-2">다음 조각</div>
+              <div 
+                className="inline-block border border-gray-600 bg-gray-800"
+                style={{
+                  width: nextPiece.shape[0].length * 20,
+                  height: nextPiece.shape.length * 20,
+                }}
+              >
+                {nextPiece.shape.map((row, y) => 
+                  row.map((cell, x) => 
+                    cell ? (
+                      <div
+                        key={`${x}-${y}`}
+                        className="inline-block"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          backgroundColor: nextPiece.color,
+                          border: '1px solid #374151',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        key={`${x}-${y}`}
+                        className="inline-block"
+                        style={{ width: 20, height: 20 }}
+                      />
+                    )
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 컨트롤 버튼 */}
+          <div className="flex space-x-2">
+            <Button
+              onClick={handleStartGame}
+              disabled={isPlaying}
+              className="flex items-center space-x-2"
+            >
+              <Play className="w-4 h-4" />
+              <span>시작</span>
+            </Button>
+            
+            <Button
+              onClick={handlePauseGame}
+              disabled={!isPlaying}
+              className="flex items-center space-x-2"
+            >
+              <Pause className="w-4 h-4" />
+              <span>{isPaused ? '재개' : '일시정지'}</span>
+            </Button>
+            
+            <Button
+              onClick={handleResetGame}
+              className="flex items-center space-x-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>리셋</span>
+            </Button>
+          </div>
+
+          {/* 조작법 */}
+          <div className="text-center text-sm text-gray-500">
+            <div>← → : 이동 | ↑ : 회전 | ↓ : 빠른 하강</div>
           </div>
         </CardContent>
       </Card>
