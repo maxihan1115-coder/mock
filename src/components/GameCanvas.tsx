@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Play, Pause, RotateCcw, ArrowDown } from 'lucide-react';
+import { Play, Pause, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 // 테트리스 블록 타입 정의
@@ -96,21 +96,15 @@ const BLOCK_SIZE = 25;
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
-  const [keys, setKeys] = useState<Set<string>>(new Set());
-  
   const {
-    user,
     currentStage,
     score,
-    lives,
     isPlaying,
     isPaused,
     setIsPlaying,
     setIsPaused,
     setScore,
-    setLives,
     completeStage,
-    unlockStage,
   } = useGameStore();
 
   // 테트리스 게임 상태
@@ -122,7 +116,6 @@ export function GameCanvas() {
   const [nextPiece, setNextPiece] = useState<Tetromino | null>(null);
   const [level, setLevel] = useState(1);
   const [lines, setLines] = useState(0);
-  const [dropTime, setDropTime] = useState(0);
   const [lastDropTime, setLastDropTime] = useState(0);
 
   // 새로운 테트로미노 생성
@@ -137,7 +130,6 @@ export function GameCanvas() {
     setBoard(Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0)));
     setLevel(1);
     setLines(0);
-    setDropTime(0);
     setLastDropTime(0);
     
     const firstPiece = createNewPiece();

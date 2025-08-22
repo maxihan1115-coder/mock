@@ -41,7 +41,10 @@ try {
 if (needBuild) {
   try {
     console.log('[probe] starting build process...');
-    execSync('npm run build', { stdio: 'inherit' });
+    execSync('npm run build', { 
+      stdio: 'inherit',
+      timeout: 300000 // 5분 타임아웃
+    });
     console.log('[probe] build finished ✅');
   } catch (e) {
     console.error('[fatal] build failed');
@@ -60,7 +63,10 @@ if (needBuild) {
 // 5. 서버 시작
 console.log(`[exec] next start -p ${port}`);
 try {
-  execSync(`next start -p ${port}`, { stdio: 'inherit' });
+  execSync(`next start -p ${port}`, { 
+    stdio: 'inherit',
+    timeout: 60000 // 1분 타임아웃
+  });
 } catch (e) {
   console.error('[fatal] next start failed');
   console.error(e?.message || e);
