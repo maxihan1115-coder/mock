@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  uuid      String   @unique
+  username  String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model GameState {
+  id        String   @id @default(cuid())
+  uuid      String   @unique
+  score     Int      @default(0)
+  stage     Int      @default(1)
+  playTime  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("game_states")
+}
+
+model StageProgress {
+  id        String   @id @default(cuid())
+  uuid      String
+  stageId   Int
+  completed Boolean  @default(false)
+  score     Int      @default(0)
+  playTime  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([uuid, stageId])
+  @@map("stage_progress")
+}
+
+model QuestProgress {
+  id          String   @id @default(cuid())
+  uuid        String
+  questId     Int
+  progress    Int      @default(0)
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([uuid, questId])
+  @@map("quest_progress")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  uuid      String
+  date      DateTime @db.Date
+  checked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([uuid, date])
+  @@map("attendance")
+}
+
+model PlatformEvent {
+  id        String   @id @default(cuid())
+  uuid      String
+  eventType String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@map("platform_events")
+}

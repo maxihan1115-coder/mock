@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import QuestProgressModel from '@/models/QuestProgress';
+import prisma from '@/lib/mysql';
 
 export async function GET(request: NextRequest) {
   console.log('🔄 /quest/list API 호출됨');
@@ -28,10 +27,7 @@ export async function GET(request: NextRequest) {
     
     console.log('✅ API 인증 성공');
     
-    // 2. DB 연결
-    await dbConnect();
-    
-    // 3. 게임 내 퀘스트 데이터 (인게임 퀘스트와 연동)
+    // 2. 게임 내 퀘스트 데이터 (인게임 퀘스트와 연동)
     const gameQuests = [
       {
         id: 1,
@@ -72,7 +68,7 @@ export async function GET(request: NextRequest) {
     
     console.log('📋 게임 내 퀘스트 리스트 생성:', gameQuests);
     
-    // 4. 성공 응답 반환 (플랫폼 API 형식에 맞춤)
+    // 3. 성공 응답 반환 (플랫폼 API 형식에 맞춤)
     const response = {
       success: true,
       error: null,
