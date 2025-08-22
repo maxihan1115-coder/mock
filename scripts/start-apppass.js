@@ -7,11 +7,13 @@ const path = require('path');
 // 프로세스 종료 시그널 처리
 process.on('SIGTERM', () => {
   console.log('[signal] SIGTERM received, shutting down gracefully...');
+  console.log('[memory] 종료 전 메모리 상태:', process.memoryUsage());
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('[signal] SIGINT received, shutting down gracefully...');
+  console.log('[memory] 종료 전 메모리 상태:', process.memoryUsage());
   process.exit(0);
 });
 
@@ -130,6 +132,7 @@ try {
   // 서버 프로세스 종료 처리
   serverProcess.on('close', (code, signal) => {
     console.log(`[server] 서버 프로세스 종료 - 코드: ${code}, 시그널: ${signal}`);
+    console.log('[memory] 서버 종료 시 메모리 상태:', process.memoryUsage());
     process.exit(code || 0);
   });
   
@@ -141,6 +144,7 @@ try {
   // 현재 프로세스가 종료될 때 서버 프로세스도 함께 종료
   process.on('exit', () => {
     console.log('[signal] 메인 프로세스 종료, 서버 프로세스도 종료합니다.');
+    console.log('[memory] 최종 메모리 상태:', process.memoryUsage());
     if (!serverProcess.killed) {
       serverProcess.kill('SIGTERM');
     }

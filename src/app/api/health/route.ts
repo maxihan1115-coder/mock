@@ -3,12 +3,20 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // 시스템 정보 수집
+    const memoryUsage = process.memoryUsage();
     const systemInfo = {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      memoryUsage: process.memoryUsage(),
+      memoryUsage: {
+        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`, // Resident Set Size
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`, // V8 힙 총 크기
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`, // V8 힙 사용량
+        external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`, // 외부 메모리
+        arrayBuffers: `${Math.round(memoryUsage.arrayBuffers / 1024 / 1024)}MB` // ArrayBuffer
+      },
       nodeVersion: process.version,
       platform: process.platform,
+      pid: process.pid,
       env: {
         NODE_ENV: process.env.NODE_ENV,
         PORT: process.env.PORT,
