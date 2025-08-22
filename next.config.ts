@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   experimental: {
     // 서버 컴포넌트 최적화 (deprecated 경고 해결)
   },
+  // AppPass 환경 최적화
+  poweredByHeader: false,
+  compress: true,
   // 헬스 체크를 위한 설정
   async headers() {
     return [

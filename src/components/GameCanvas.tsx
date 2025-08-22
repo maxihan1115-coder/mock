@@ -108,7 +108,7 @@ export function GameCanvas() {
   } = useGameStore();
 
   // 테트리스 게임 상태
-  const [board, setBoard] = useState<number[][]>(
+  const [board, setBoard] = useState<(string | number)[][]>(
     Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0))
   );
   const [currentPiece, setCurrentPiece] = useState<Tetromino | null>(null);
@@ -152,7 +152,7 @@ export function GameCanvas() {
             newX < 0 || 
             newX >= BOARD_WIDTH || 
             newY >= BOARD_HEIGHT ||
-            (newY >= 0 && board[newY][newX])
+            (newY >= 0 && board[newY][newX] !== 0)
           ) {
             return true;
           }
@@ -166,6 +166,8 @@ export function GameCanvas() {
   const placePiece = () => {
     if (!currentPiece) return;
     
+    console.log('🔧 조각 고정 시작:', currentPiece.type, currentPosition);
+    
     const newBoard = board.map(row => [...row]);
     
     for (let y = 0; y < currentPiece.shape.length; y++) {
@@ -174,12 +176,16 @@ export function GameCanvas() {
           const boardX = currentPosition.x + x;
           const boardY = currentPosition.y + y;
           if (boardY >= 0) {
-            newBoard[boardY][boardX] = 1;
+            newBoard[boardY][boardX] = currentPiece.color;
+            console.log(`📍 블록 배치: (${boardX}, ${boardY}) = ${currentPiece.color}`);
           }
         }
       }
     }
     
+    console.log('🔧 새로운 보드 상태:', newBoard);
+    console.log('🔧 보드 첫 번째 행:', newBoard[0]);
+    console.log('🔧 보드 두 번째 행:', newBoard[1]);
     setBoard(newBoard);
     
     // 라인 클리어 체크
@@ -190,10 +196,10 @@ export function GameCanvas() {
   };
 
   // 라인 클리어 체크
-  const checkLines = (currentBoard: number[][]) => {
+  const checkLines = (currentBoard: (string | number)[][]) => {
     let linesCleared = 0;
     const newBoard = currentBoard.filter(row => {
-      const isFull = row.every(cell => cell === 1);
+      const isFull = row.every(cell => cell !== 0);
       if (isFull) {
         linesCleared++;
         return false;
@@ -293,6 +299,7 @@ export function GameCanvas() {
       } else {
         if (dy > 0) {
           // 블록이 바닥에 도달했으므로 고정
+          console.log('🛑 충돌 감지! 조각 고정 필요');
           setTimeout(() => placePiece(), 0);
         }
         return prev;
@@ -347,6 +354,7 @@ export function GameCanvas() {
             return newPosition;
           } else {
             // 블록이 바닥에 도달했으므로 고정
+            console.log('🔄 자동 하강에서 충돌 감지! 조각 고정');
             placePiece();
             return prev;
           }
@@ -405,11 +413,15 @@ export function GameCanvas() {
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    console.log('🎨 캔버스 렌더링 시작, 보드 상태:', board);
+    console.log('🎨 보드 첫 번째 행:', board[0]);
+
     // 보드 그리기
     for (let y = 0; y < BOARD_HEIGHT; y++) {
       for (let x = 0; x < BOARD_WIDTH; x++) {
-        if (board[y][x]) {
-          ctx.fillStyle = '#6b7280';
+        if (board[y][x] && board[y][x] !== 0) {
+          console.log(`🎨 블록 그리기: (${x}, ${y}) = ${board[y][x]}`);
+          ctx.fillStyle = board[y][x] as string;
           ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
           ctx.strokeStyle = '#374151';
           ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);

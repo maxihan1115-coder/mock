@@ -63,9 +63,18 @@ if (needBuild) {
 // 5. 서버 시작
 console.log(`[exec] next start -p ${port}`);
 try {
+  // 환경 변수 설정
+  const env = {
+    ...process.env,
+    PORT: port.toString(),
+    NODE_ENV: 'production',
+    NEXT_TELEMETRY_DISABLED: '1'
+  };
+  
   execSync(`next start -p ${port}`, { 
     stdio: 'inherit',
-    timeout: 60000 // 1분 타임아웃
+    timeout: 120000, // 2분 타임아웃으로 증가
+    env: env
   });
 } catch (e) {
   console.error('[fatal] next start failed');
@@ -75,6 +84,12 @@ try {
   console.log('[debug] current directory contents:');
   try {
     execSync('ls -la', { stdio: 'inherit' });
+  } catch {}
+  
+  // .next 디렉토리 내용 확인
+  console.log('[debug] .next directory contents:');
+  try {
+    execSync('ls -la .next/', { stdio: 'inherit' });
   } catch {}
   
   process.exit(1);
