@@ -361,12 +361,12 @@ export function GameCanvas() {
         });
         setLastDropTime(timestamp);
       }
-      
+
       animationRef.current = requestAnimationFrame(gameLoop);
     };
 
     animationRef.current = requestAnimationFrame(gameLoop);
-    
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -468,11 +468,11 @@ export function GameCanvas() {
               <div className="text-xl font-bold">{lines}</div>
             </div>
           </div>
-
+          
           {/* 게임 캔버스 */}
           <div className="relative">
-            <canvas
-              ref={canvasRef}
+          <canvas
+            ref={canvasRef}
               className="border-2 border-gray-600 bg-gray-800"
               style={{
                 width: BOARD_WIDTH * BLOCK_SIZE,
