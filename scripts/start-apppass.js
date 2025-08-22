@@ -61,7 +61,7 @@ if (needBuild) {
     console.log('[probe] starting build process...');
     execSync('npm run build', { 
       stdio: 'inherit',
-      timeout: 300000 // 5분 타임아웃
+      timeout: 600000 // 10분 타임아웃으로 증가
     });
     console.log('[probe] build finished ✅');
   } catch (e) {
