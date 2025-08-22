@@ -1,8 +1,30 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+// 프로세스 종료 시그널 처리
+process.on('SIGTERM', () => {
+  console.log('[signal] SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('[signal] SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
+
+// 예상치 못한 오류 처리
+process.on('uncaughtException', (error) => {
+  console.error('[fatal] Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[fatal] Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 console.log('=== AppPass start probe ===');
 
@@ -98,11 +120,32 @@ try {
   // 프로세스 시작 전 메모리 상태 확인
   console.log('[exec] 서버 시작 전 메모리 상태:', process.memoryUsage());
   
-  execSync(`next start -p ${port}`, { 
+  // spawn을 사용하여 프로세스 관리 개선
+  const serverProcess = spawn('next', ['start', '-p', port.toString()], {
     stdio: 'inherit',
-    timeout: 120000, // 2분 타임아웃으로 증가
-    env: env
+    env: env,
+    detached: false // 부모 프로세스와 함께 종료되도록 설정
   });
+  
+  // 서버 프로세스 종료 처리
+  serverProcess.on('close', (code, signal) => {
+    console.log(`[server] 서버 프로세스 종료 - 코드: ${code}, 시그널: ${signal}`);
+    process.exit(code || 0);
+  });
+  
+  serverProcess.on('error', (error) => {
+    console.error('[server] 서버 프로세스 오류:', error);
+    process.exit(1);
+  });
+  
+  // 현재 프로세스가 종료될 때 서버 프로세스도 함께 종료
+  process.on('exit', () => {
+    console.log('[signal] 메인 프로세스 종료, 서버 프로세스도 종료합니다.');
+    if (!serverProcess.killed) {
+      serverProcess.kill('SIGTERM');
+    }
+  });
+  
 } catch (e) {
   console.error('[fatal] next start failed');
   console.error('[fatal] 에러 타입:', e?.constructor?.name);

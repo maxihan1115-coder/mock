@@ -10,7 +10,9 @@
     "server": "node server.js",
     "next-server": "next start -p 3001",
     "client": "next dev",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "clean": "rm -rf .next && rm -rf node_modules/.cache",
+    "kill": "pkill -f 'node.*start-apppass' || pkill -f 'next.*start' || echo 'No processes found'"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
