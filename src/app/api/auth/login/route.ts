@@ -4,7 +4,6 @@ import { User, APIResponse } from '@/types/game';
 export async function POST(request: NextRequest) {
   try {
     console.log('Login API called');
-    await dbConnect();
     console.log('Database connected');
     
     const body = await request.json();
@@ -20,11 +19,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 기존 사용자 확인
-    let userDoc = await UserModel.findOne({ username });
     
     if (!userDoc) {
       // 새 사용자 생성 - 순차적 UUID 생성
-      const userCount = await UserModel.countDocuments();
       const sequentialUuid = (userCount + 1).toString();
       
       const newUser = {
@@ -43,7 +40,6 @@ export async function POST(request: NextRequest) {
           platformLinkedAt: new Date(),
         }),
       };
-      userDoc = await UserModel.create(newUser);
     } else {
       // 기존 사용자의 마지막 로그인 시간 업데이트
       userDoc.lastLoginAt = new Date();

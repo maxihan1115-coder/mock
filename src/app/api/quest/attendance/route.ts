@@ -76,15 +76,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 5. DB 연결
-    await dbConnect();
-    console.log('✅ DB 연결 완료');
+    // 5. 시뮬레이션: 출석 기록 조회
+    console.log('✅ 시뮬레이션 모드');
     
-    // 6. 해당 날짜의 출석 기록 조회
-    const attendanceRecord = await AttendanceModel.findOne({
-      userId: uuid,
-      attendanceDate: formattedDate
-    });
+    // 6. 해당 날짜의 출석 기록 조회 (시뮬레이션)
+    const attendanceRecord = null; // 출석 안함으로 시뮬레이션
     
     console.log('🔍 출석 기록 조회 결과:', {
       userId: uuid,

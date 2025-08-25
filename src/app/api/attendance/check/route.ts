@@ -41,69 +41,27 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ UUID 검증 통과:', uuid);
     
-    // 4. DB 연결
-    await dbConnect();
-    
-    // 5. 오늘 날짜
+    // 4. 오늘 날짜
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     console.log('📅 오늘 날짜:', today);
     
-    // 6. 오늘 이미 출석했는지 확인
-    const todayAttendance = await AttendanceModel.findOne({
-      userId: uuid,
-      attendanceDate: today
-    });
-    
-    if (todayAttendance) {
-      console.log('⚠️ 오늘 이미 출석 완료');
-      return NextResponse.json({
-        success: false,
-        error: 'Already attended today',
-        data: {
-          attendanceDate: today,
-          alreadyAttended: true,
-          consecutiveDays: todayAttendance.consecutiveDays,
-          totalDays: todayAttendance.totalDays
-        }
-      });
-    }
-    
-    // 7. 연속 출석 일수 계산
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    const yesterdayAttendance = await AttendanceModel.findOne({
-      userId: uuid,
-      attendanceDate: yesterdayStr
-    });
-    
-    // 8. 총 출석 일수 계산
-    const totalAttendanceCount = await AttendanceModel.countDocuments({ userId: uuid });
-    
-    let consecutiveDays = 1;
-    if (yesterdayAttendance) {
-      consecutiveDays = yesterdayAttendance.consecutiveDays + 1;
-    }
-    
-    const totalDays = totalAttendanceCount + 1;
-    
-    // 9. 출석 보상 계산
+    // 5. 시뮬레이션: 출석 체크
+    const consecutiveDays = 1;
+    const totalDays = 1;
     const rewards = calculateAttendanceRewards(consecutiveDays);
     
-    // 10. 출석 데이터 저장
-    const attendance = await AttendanceModel.create({
-      userId: uuid,
+    // 시뮬레이션: 출석 데이터
+    const attendance = {
       attendanceDate: today,
-      attendedAt: new Date(),
       consecutiveDays: consecutiveDays,
       totalDays: totalDays,
-      rewards: rewards
-    });
+      rewards: rewards,
+      attendedAt: new Date()
+    };
     
     console.log('✅ 출석 체크 성공:', attendance);
     
-    // 11. 성공 응답 반환
+    // 6. 성공 응답 반환
     const response = {
       success: true,
       error: null,

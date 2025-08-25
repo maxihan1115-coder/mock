@@ -4,7 +4,6 @@ import { APIResponse, Quest } from '@/types/game';
 // 퀘스트 진행도 조회
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
 // 퀘스트 진행도 업데이트
 export async function PUT(request: NextRequest) {
   try {
-    await dbConnect();
     const { userId, questId, progress, isCompleted } = await request.json();
 
     if (!userId || !questId) {

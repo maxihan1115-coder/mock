@@ -4,7 +4,6 @@ import { APIResponse } from '@/types/game';
 // 게임 상태 조회
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -15,29 +14,18 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    let gameState = await GameStateModel.findOne({ userId });
-    
-    if (!gameState) {
-      // 기본 게임 상태 생성
-      gameState = await GameStateModel.create({
-        userId,
-        currentStage: 1,
-        score: 0,
-        lives: 3,
-        isPlaying: false,
-        isPaused: false,
-      });
-    }
+    // 시뮬레이션: 게임 상태
+    const gameState = {
+      currentStage: 1,
+      score: 0,
+      lives: 3,
+      isPlaying: false,
+      isPaused: false,
+    };
 
     return NextResponse.json<APIResponse>({
       success: true,
-      data: {
-        currentStage: gameState.currentStage,
-        score: gameState.score,
-        lives: gameState.lives,
-        isPlaying: gameState.isPlaying,
-        isPaused: gameState.isPaused,
-      },
+      data: gameState,
     });
 
   } catch (error) {
@@ -52,7 +40,6 @@ export async function GET(request: NextRequest) {
 // 게임 상태 업데이트
 export async function PUT(request: NextRequest) {
   try {
-    await dbConnect();
     const { userId, ...updateData } = await request.json();
 
     if (!userId) {
@@ -62,27 +49,19 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const gameState = await GameStateModel.findOneAndUpdate(
-      { userId },
-      { 
-        ...updateData,
-        updatedAt: new Date()
-      },
-      { 
-        new: true, 
-        upsert: true 
-      }
-    );
+    // 시뮬레이션: 게임 상태 업데이트
+    const updatedGameState = {
+      currentStage: 1,
+      score: 0,
+      lives: 3,
+      isPlaying: false,
+      isPaused: false,
+      ...updateData,
+    };
 
     return NextResponse.json<APIResponse>({
       success: true,
-      data: {
-        currentStage: gameState.currentStage,
-        score: gameState.score,
-        lives: gameState.lives,
-        isPlaying: gameState.isPlaying,
-        isPaused: gameState.isPaused,
-      },
+      data: updatedGameState,
     });
 
   } catch (error) {

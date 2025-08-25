@@ -40,60 +40,27 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ UUID 검증 통과:', uuid);
     
-    // 4. DB 연결
-    await dbConnect();
-    
-    // 5. 오늘 날짜
+    // 4. 오늘 날짜
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     console.log('📅 오늘 날짜:', today);
     
-    // 6. 오늘 출석 여부 확인
-    const todayAttendance = await AttendanceModel.findOne({
-      userId: uuid,
-      attendanceDate: today
-    });
+    // 5. 시뮬레이션: 출석 현황
+    const todayAttendance = null; // 오늘 출석 안함
+    const recentAttendance: any[] = []; // 빈 배열
+    const totalAttendanceCount = 0;
+    const consecutiveDays = 0;
     
-    // 7. 최근 출석 기록 조회 (7일)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-    
-    const recentAttendance = await AttendanceModel.find({
-      userId: uuid,
-      attendanceDate: { $gte: sevenDaysAgoStr, $lte: today }
-    }).sort({ attendanceDate: 1 });
-    
-    // 8. 총 출석 통계
-    const totalAttendanceCount = await AttendanceModel.countDocuments({ userId: uuid });
-    
-    // 9. 연속 출석 일수 계산
-    let consecutiveDays = 0;
-    if (todayAttendance) {
-      consecutiveDays = todayAttendance.consecutiveDays;
-    } else if (recentAttendance.length > 0) {
-      // 어제까지의 연속 출석 계산
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
-      const yesterdayAttendance = recentAttendance.find(a => a.attendanceDate === yesterdayStr);
-      if (yesterdayAttendance) {
-        consecutiveDays = yesterdayAttendance.consecutiveDays;
-      }
-    }
-    
-    // 10. 7일간 출석 현황 생성
+    // 6. 7일간 출석 현황 생성 (시뮬레이션)
     const weeklyStatus = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const attendance = recentAttendance.find(a => a.attendanceDate === dateStr);
       weeklyStatus.push({
         date: dateStr,
-        attended: !!attendance,
-        rewards: attendance?.rewards || null
+        attended: false,
+        rewards: null
       });
     }
     

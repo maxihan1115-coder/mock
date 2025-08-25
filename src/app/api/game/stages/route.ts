@@ -4,7 +4,6 @@ import { APIResponse, Stage } from '@/types/game';
 // 스테이지 진행도 조회
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -15,7 +14,6 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const stageProgress = await StageProgressModel.find({ userId });
     
     // 기본 스테이지 정보 (스토어에서 가져온 초기 데이터)
     const initialStages: Stage[] = [
@@ -87,7 +85,6 @@ export async function GET(request: NextRequest) {
 // 스테이지 진행도 업데이트
 export async function PUT(request: NextRequest) {
   try {
-    await dbConnect();
     const { userId, stageId, isUnlocked, isCompleted } = await request.json();
 
     if (!userId || !stageId) {
@@ -106,22 +103,16 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const stageProgress = await StageProgressModel.findOneAndUpdate(
-      { userId, stageId },
-      updateData,
-      { 
-        new: true, 
-        upsert: true 
-      }
-    );
+    // 시뮬레이션: 스테이지 진행도 업데이트
+    const stageProgress = {
+      stageId,
+      isUnlocked: isUnlocked || false,
+      isCompleted: isCompleted || false,
+    };
 
     return NextResponse.json<APIResponse>({
       success: true,
-      data: {
-        stageId,
-        isUnlocked: stageProgress.isUnlocked,
-        isCompleted: stageProgress.isCompleted,
-      },
+      data: stageProgress,
     });
 
   } catch (error) {
