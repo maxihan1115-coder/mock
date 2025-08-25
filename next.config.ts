@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
     // 배포 환경에서는 ESLint 건너뛰기
     ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
+  // 정적 페이지 생성 최소화
+  trailingSlash: false,
   // 헬스 체크를 위한 설정
   async headers() {
     return [

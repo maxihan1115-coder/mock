@@ -83,9 +83,9 @@ try {
 if (needBuild) {
   try {
     console.log('[probe] starting build process...');
-    execSync('npx next build --no-lint', { 
+    execSync('npx next build --no-lint --no-mangling --debug', { 
       stdio: 'inherit',
-      timeout: 600000 // 10분 타임아웃으로 증가
+      timeout: 900000 // 15분 타임아웃으로 증가
     });
     console.log('[probe] build finished ✅');
   } catch (e) {
@@ -110,7 +110,12 @@ try {
     ...process.env,
     PORT: port.toString(),
     NODE_ENV: 'production',
-    NEXT_TELEMETRY_DISABLED: '1'
+    NEXT_TELEMETRY_DISABLED: '1',
+    // 기본 환경변수 설정 (호스팅 환경에서 누락될 수 있음)
+    DATABASE_URL: process.env.DATABASE_URL || 'mysql://localhost:3306/quest_mock_game',
+    PLATFORM_API_BASE_URL: process.env.PLATFORM_API_BASE_URL || 'https://api.example.com',
+    PLATFORM_API_AUTH_TOKEN: process.env.PLATFORM_API_AUTH_TOKEN || 'dummy-token',
+    NEXT_PUBLIC_API_KEY: process.env.NEXT_PUBLIC_API_KEY || 'dummy-key'
   };
   
   console.log('[exec] 환경 변수 설정 완료:', {
