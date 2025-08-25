@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APIResponse, Stage } from '@/types/game';
-import dbConnect from '@/lib/mongodb';
-import StageProgressModel from '@/models/StageProgress';
 
 // 스테이지 진행도 조회
 export async function GET(request: NextRequest) {

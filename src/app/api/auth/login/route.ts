@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { User, APIResponse } from '@/types/game';
-import dbConnect from '@/lib/mongodb';
-import UserModel from '@/models/User';
 
 export async function POST(request: NextRequest) {
   try {

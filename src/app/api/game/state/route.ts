@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APIResponse } from '@/types/game';
-import dbConnect from '@/lib/mongodb';
-import GameStateModel from '@/models/GameState';
 
 // 게임 상태 조회
 export async function GET(request: NextRequest) {

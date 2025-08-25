@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import QuestProgressModel from '@/models/QuestProgress';
+import { prisma } from '@/lib/mysql';
 
 export async function POST(request: NextRequest) {
   console.log('🔄 /quest/check API 호출됨');
@@ -54,8 +53,6 @@ export async function POST(request: NextRequest) {
     // 5. DB 연결 (빌드 시에는 건너뛰기)
     if (process.env.NODE_ENV !== 'production') {
       console.log('🔧 개발 환경: DB 연결 건너뛰기');
-    } else {
-      await dbConnect();
     }
     
     // 6. 게임 내 퀘스트 데이터 (인게임 퀘스트와 연동)
@@ -98,10 +95,14 @@ export async function POST(request: NextRequest) {
     ];
     
     // 7. 퀘스트 진행도 조회 (DB에서 실제 데이터 가져오기)
-    const questProgressList = await QuestProgressModel.find({
-      userId: uuid,
-      questId: { $in: questIds.map(id => `quest-${id}`) }
-    });
+    const questProgressList = process.env.NODE_ENV === 'production' 
+      ? await prisma.questProgress.findMany({
+          where: {
+            userId: uuid,
+            questId: { in: questIds.map(id => `quest-${id}`) }
+          }
+        })
+      : [];
     
     console.log('📊 DB에서 조회한 퀘스트 진행도:', questProgressList);
     

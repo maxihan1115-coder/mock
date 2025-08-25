@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APIResponse, Quest } from '@/types/game';
-import dbConnect from '@/lib/mongodb';
-import QuestProgressModel from '@/models/QuestProgress';
 
 // 퀘스트 진행도 조회
 export async function GET(request: NextRequest) {

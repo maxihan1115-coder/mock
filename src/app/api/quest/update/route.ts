@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import QuestProgressModel from '@/models/QuestProgress';
+import { prisma } from '@/lib/mysql';
 
 export async function POST(request: NextRequest) {
   console.log('🔄 /quest/update API 호출됨');
@@ -51,38 +50,42 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ 요청 검증 통과:', { uuid, questId, progress, isCompleted });
     
-    // 5. DB 연결
-    await dbConnect();
-    
-    // 6. 퀘스트 진행도 업데이트 또는 생성
+    // 5. 퀘스트 진행도 업데이트 또는 생성
     const questProgressId = `quest-${questId}`;
     
-    const existingProgress = await QuestProgressModel.findOne({
-      userId: uuid,
-      questId: questProgressId
-    });
-    
-    if (existingProgress) {
-      // 기존 진행도 업데이트
-      existingProgress.progress = progress || existingProgress.progress;
-      existingProgress.isCompleted = isCompleted !== undefined ? isCompleted : existingProgress.isCompleted;
-      existingProgress.updatedAt = new Date();
-      
-      await existingProgress.save();
-      console.log('📝 기존 퀘스트 진행도 업데이트:', existingProgress);
-    } else {
-      // 새로운 진행도 생성
-      const newProgress = new QuestProgressModel({
-        userId: uuid,
-        questId: questProgressId,
-        progress: progress || 0,
-        isCompleted: isCompleted || false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    if (process.env.NODE_ENV === 'production') {
+      const existingProgress = await prisma.questProgress.findFirst({
+        where: {
+          userId: uuid,
+          questId: questProgressId
+        }
       });
       
-      await newProgress.save();
-      console.log('📝 새로운 퀘스트 진행도 생성:', newProgress);
+      if (existingProgress) {
+        // 기존 진행도 업데이트
+        await prisma.questProgress.update({
+          where: { id: existingProgress.id },
+          data: {
+            progress: progress || existingProgress.progress,
+            isCompleted: isCompleted !== undefined ? isCompleted : existingProgress.isCompleted,
+            updatedAt: new Date()
+          }
+        });
+        console.log('📝 기존 퀘스트 진행도 업데이트:', existingProgress);
+      } else {
+        // 새로운 진행도 생성
+        await prisma.questProgress.create({
+          data: {
+            userId: uuid,
+            questId: questProgressId,
+            progress: progress || 0,
+            isCompleted: isCompleted || false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        });
+        console.log('📝 새로운 퀘스트 진행도 생성 완료');
+      }
     }
     
     // 7. 성공 응답 반환

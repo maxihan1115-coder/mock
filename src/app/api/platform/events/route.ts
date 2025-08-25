@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APIResponse } from '@/types/game';
-import dbConnect from '@/lib/mongodb';
-import PlatformEventModel from '@/models/PlatformEvent';
 
 // 플랫폼 이벤트 생성
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
     const { userId, eventType, eventData } = await request.json();
 
     if (!userId || !eventType) {
@@ -16,35 +13,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const platformEvent = await PlatformEventModel.create({
+    // 플랫폼으로 이벤트 전송 시뮬레이션
+    const platformEvent = {
       userId,
       eventType,
       eventData,
       timestamp: new Date(),
-    });
+      isSentToPlatform: true,
+      sentToPlatformAt: new Date(),
+      status: 'sent',
+      platformResponse: { success: true, message: 'Event sent to platform' }
+    };
 
-    // 플랫폼으로 이벤트 전송 시뮬레이션
-    console.log('Platform Event:', {
-      userId,
-      eventType,
-      eventData,
-      timestamp: platformEvent.timestamp,
-    });
-
-    // 실제 플랫폼 연동에서는 여기서 외부 API 호출
-    // const platformResponse = await sendToPlatform(platformEvent);
-    
-    // 시뮬레이션: 성공으로 처리
-    platformEvent.isSentToPlatform = true;
-    platformEvent.sentToPlatformAt = new Date();
-    platformEvent.status = 'sent';
-    platformEvent.platformResponse = { success: true, message: 'Event sent to platform' };
-    await platformEvent.save();
+    console.log('Platform Event:', platformEvent);
 
     return NextResponse.json<APIResponse>({
       success: true,
       data: {
-        eventId: platformEvent._id,
+        eventId: 'simulated-event-id',
         status: platformEvent.status,
         sentAt: platformEvent.sentToPlatformAt,
       },
@@ -70,21 +56,14 @@ export async function POST(request: NextRequest) {
 // 플랫폼 이벤트 조회
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const eventType = searchParams.get('eventType');
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query: Record<string, unknown> = {};
-    if (userId) query.userId = userId;
-    if (eventType) query.eventType = eventType;
-    if (status) query.status = status;
-
-    const events = await PlatformEventModel.find(query)
-      .sort({ timestamp: -1 })
-      .limit(limit);
+    // 시뮬레이션: 빈 배열 반환
+    const events: any[] = [];
 
     return NextResponse.json<APIResponse>({
       success: true,

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import AttendanceModel from '@/models/Attendance';
+
 
 export async function POST(request: NextRequest) {
   console.log('🔄 /attendance/check API 호출됨');
