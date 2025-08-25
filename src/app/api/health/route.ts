@@ -20,8 +20,8 @@ export async function GET() {
       env: {
         NODE_ENV: process.env.NODE_ENV,
         PORT: process.env.PORT,
-        DATABASE_URL: process.env.DATABASE_URL ? '설정됨' : '설정안됨',
-        PLATFORM_API_BASE_URL: process.env.PLATFORM_API_BASE_URL ? '설정됨' : '설정안됨'
+        DATABASE_URL: process.env.NODE_ENV === 'production' ? (process.env.DATABASE_URL ? '설정됨' : '설정안됨') : '개발환경',
+        PLATFORM_API_BASE_URL: process.env.NODE_ENV === 'production' ? (process.env.PLATFORM_API_BASE_URL ? '설정됨' : '설정안됨') : '개발환경'
       }
     };
 

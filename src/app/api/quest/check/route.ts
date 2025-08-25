@@ -51,8 +51,12 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ 요청 검증 통과:', { uuid, questIds });
     
-    // 5. DB 연결
-    await dbConnect();
+    // 5. DB 연결 (빌드 시에는 건너뛰기)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔧 개발 환경: DB 연결 건너뛰기');
+    } else {
+      await dbConnect();
+    }
     
     // 6. 게임 내 퀘스트 데이터 (인게임 퀘스트와 연동)
     const gameQuests = [
