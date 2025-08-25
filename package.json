@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000",
     "start": "node scripts/start-apppass.js",
     "start:apppass": "node scripts/start-apppass.js",
-    "build": "next build",
+    "build": "npx next build",
     "server": "node server.js",
     "next-server": "next start -p 3001",
     "client": "next dev",

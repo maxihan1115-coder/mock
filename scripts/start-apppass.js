@@ -83,7 +83,7 @@ try {
 if (needBuild) {
   try {
     console.log('[probe] starting build process...');
-    execSync('npm run build', { 
+    execSync('npx next build', { 
       stdio: 'inherit',
       timeout: 600000 // 10분 타임아웃으로 증가
     });
